@@ -1,6 +1,9 @@
 
 function setTextFont(cxt){
-    cxt.font = "12px SimSun" ;
+    cxt.font = "12px Microsoft YaHei,SimSun,STSong" ;
+}
+function setEnTextFont(cxt){
+    cxt.font = "12px Arial,Courier New" ;
 }
 function setTextFillStyle(cxt){
     cxt.fillStyle = "black" ;
@@ -44,7 +47,7 @@ function processNerNode(neVal , idx , drawStruct){
     }
 }
 function processSrlNode(idx , arg , drawStruct){
-    if(args == undefined) return ;
+    if(arg.length == 0) return ; // if node has no arg , the arg should be a empty array
     else drawStruct.srl.push({"idx" : idx , "arg" : arg }) ;
     
 }
@@ -70,8 +73,11 @@ function initDrawStruct(sentObj , drawStruct , canvas){
         //process ner
         processNerNode(sentObj[i].ne , i + 1 ,drawStruct) ;
         //process srl
-        processSrlNode(i , sentObj[i].arg , drawStruct) ; // do not (i+1) !!
+        processSrlNode(i , sentObj[i]["arg"] , drawStruct) ; // do not (i+1) !!
+        //process dp
+        drawStruct.dp.push({"from" : sentObj[i].parent , "to" : i , "relate" : sentObj[i].relate}) ;
     }
+    console.log(drawStruct.dp) ;
     //we need know the last Word 's length, so add a virtual node at last
     preTextWidth = cxt.measureText(drawStruct.texts[i]).width ;
     curContPos = drawStruct.posInfo[i] + preTextWidth + drawStruct.WS_INTERVAL ;
@@ -101,7 +107,7 @@ function drawPOSTAG(drawStruct , canvas){
         height = 20 ;
     cxt = canvas.getContext("2d") ;
     cxt.save() ;
-    setTextFont(cxt) ;
+    setEnTextFont(cxt) ;
     setTextFillStyle(cxt) ;
     cxt.textAlign = "center" ;
     for(i = 1 ; i < drawStruct.postag.length ; i++){ // skip "Root" 's postag
@@ -165,7 +171,8 @@ function drawSrlNode( drawIdx , srlNode , drawStruct , cxt){
         textY ,
         paintY ,
         paintHeight = 16 ,
-        paintInterval = 2 ,
+        paintInterval = 4 ,
+        roundRectRadius = 6 , 
         paintX ,
         argLen = srlNode.arg.length 
         ;
@@ -176,24 +183,25 @@ function drawSrlNode( drawIdx , srlNode , drawStruct , cxt){
     lineEndPos = drawStruct.posInfo[srlNode.arg[argLen -1].end + 1 + 1] - drawStruct.WS_INTERVAL/2 ; // first +1 because the posInfo has a more node for "Root" ,
                                                                                                      //second +1 for the right position is in the next node
     lineY = paintY + paintHeight - drawStruct.SRL_DISCONF.lineWidth ;
-    cxt.fillStyle = drawStruct.SRL_DISCONF.lineColor ;
+    cxt.strokeStyle = drawStruct.SRL_DISCONF.lineColor ;
     cxt.lineWidth = drawStruct.SRL_DISCONF.lineWidth ;
     cxt.beginPath() ;
     cxt.moveTo(lineStartPos , lineY) ;
     cxt.lineTo(lineEndPos , lineY) ;
     cxt.closePath() ;
-    cxt.fill() ;
+    cxt.stroke() ;
     cxt.restore() ;
-    
     //draw text (verb)
     cxt.fillStyle = drawStruct.SRL_DISCONF.textColor ;
     cxt.textAlign = "center" ;
-    setTextFontSize(cxt) ;
+    setTextFont(cxt) ;
     textX = (drawStruct.posInfo[srlNode.idx + 1] + drawStruct.posInfo[srlNode.idx + 1 + 1] - drawStruct.WS_INTERVAL ) / 2 ;
     textY = paintY + getFontSizeFromFontstr(cxt.font) ;
     cxt.fillText(drawStruct.texts[srlNode.idx + 1] , textX , textY ) ;
     
     //draw semantic role
+        // the english 's font should be another
+    setEnTextFont(cxt) ;
     for(var i = 0 ; i < argLen ; i++){
         //draw round rect
         cxt.fillStyle = drawStruct.SRL_DISCONF.bgColor ;
@@ -202,8 +210,8 @@ function drawSrlNode( drawIdx , srlNode , drawStruct , cxt){
             w = drawStruct.posInfo[srlNode.arg[i].end + 1 + 1] - drawStruct.posInfo[srlNode.arg[i].beg + 1] ,
             h = paintHeight ;
         cxt.beginPath() ;
-        cxt.roundRect(x,y,w,h) ;
-        cxt.endPath() ;
+        cxt.roundRect(x,y,w,h,roundRectRadius) ;
+        cxt.closePath() ;
         cxt.fill() ;
         //draw text
         setTextFillStyle(cxt) ;
@@ -212,15 +220,59 @@ function drawSrlNode( drawIdx , srlNode , drawStruct , cxt){
 }
 
 function drawSRL(drawStruct , canvas){
-    var cxt = document.getContext("2d") ,
+    var cxt = canvas.getContext("2d") ,
         i 
         ;
     cxt.save() ;
     for(i = 0 ; i < drawStruct.srl.length ; i++){
-        drawSrlNode( i , srlNode , drawStruct ,cxt ) ;
+        drawSrlNode( i , drawStruct.srl[i] , drawStruct ,cxt ) ;
+        console.log(drawStruct.srl[i]) ;
     }
     cxt.restore() ;
 }
+
+function drawDpNode(dpNode , drawStruct ,cxt){
+    var fromCenter ,
+        fromX ,
+        toCenter ,
+        lineInterval = 3 ,
+        paintY = cxt.canvas.height , 
+        controlPointHeight , 
+        controlPointY ,
+        actualY // we should return it to calculate the MAX height
+        ;
+    fromCenter = ( drawStruct.posInfo[dpNode.from + 1] + drawStruct.posInfo[dpNode.from + 1 + 1] - drawStruct.WS_INTERVAL ) / 2 ;
+    toCenter = (drawStruct.posInfo[dpNode.to + 1] + drawStruct.posInfo[dpNode.to + 1 + 1] - drawStruct.WS_INTERVAL ) / 2 ;
+    fromX = fromCenter < toCenter ? fromCenter + lineInterval : fromCenter - lineInterval ;
+    controlPointHeight = Math.abs( dpNode.to - dpNode.from ) * 13 ;
+    controlPointY = paintY - controlPointHeight ;
+    actualY = paintY - controlPointHeight * 3/4 ;
+    cxt.strokeStyle = drawStruct.DP_DISCONF.lineColor ;
+    cxt.fillStyle = drawStruct.DP_DISCONF.textColor ;
+    cxt.moveTo(fromX , paintY) ;
+    cxt.bezierCurveTo(fromX , controlPointY , toCenter , controlPointY , toCenter , paintY) ;
+    cxt.stroke() ;
+    return actualY ;
+}
+
+function drawDP(drawStruct , canvas){
+    var cxt = canvas.getContext("2d") ,
+        i ,
+        minY = canvas.height ,
+        newHeight 
+        ;
+    for(i = 0 ; i < drawStruct.dp.length ; i++){
+        yPos = drawDpNode(drawStruct.dp[i] , drawStruct ,cxt) ;
+        if(minY > yPos) minY = yPos ;
+    }
+    //move the image to the right position
+    //first we should save the image data , then change the canvas height and put the imageData to it
+    newHeight = canvas.height - minY ;
+    imgData = cxt.getImageData(0 , minY , canvas.width , newHeight) ;
+    canvas.height = newHeight ;
+    cxt.putImageData(imgData , 0 , 0) ;
+}
+
 function draw(drawStruct , canvas , canvasBufs , canvasBufsDrawDisable){
     //set the canvas's width and height .
     var cxt = canvas.getContext("2d") ,
@@ -251,7 +303,9 @@ function draw(drawStruct , canvas , canvasBufs , canvasBufsDrawDisable){
     
     //draw canvasBufs to the display canvas
     // drawImage 's first parameter can be HTMLCanvasElement , HTMLImageElement , HTMLVideoElement
-    //WS
+    if(drawBufs["DP"] != null){
+        cxt.drawImage(drawBufs["DP"] , offsetX , 0) ;
+    }
     if(drawBufs["WS"] != null){
         cxt.drawImage(drawBufs["WS"] , offsetX , 100) ;
     }
@@ -261,6 +315,10 @@ function draw(drawStruct , canvas , canvasBufs , canvasBufsDrawDisable){
     if(drawBufs["NER"] != null){
         cxt.drawImage(drawBufs["NER"] , offsetX , 180 ) ;
     }
+    if(drawBufs["SRL"] != null){
+        cxt.drawImage(drawBufs["SRL"] , offsetX , 220) ;
+    }
+    
 }
 function createCanvasBuffer(w , h){
     var canvasBuf = document.createElement("canvas") ;
@@ -277,6 +335,7 @@ function drawMain(sentObj , canvasId){
             postag : [] ,
             ner : [] ,
             srl : [] ,
+            dp : [] , 
             WS_INTERVAL : 40 ,
             NER_DISCONF : {
                 "ni" : {"bgcolor" : "#99ffff" , "cnName" : "机构名"} ,
@@ -284,10 +343,14 @@ function drawMain(sentObj , canvasId){
                 "ns" : {"bgcolor" : "#ccff66" , "cnName" : "地名" }
             } ,
             SRL_DISCONF : {
-                "bgColor" : "#ee0000" ,
-                "lineColor" : "#cccccc" ,
-                "textColor" : "#333333" ,
-                "lineWidth" : 3
+                "bgColor" : "#ffec8b" ,
+                "lineColor" : "#eeeeee" ,
+                "textColor" : "#6f8ca0" ,
+                "lineWidth" : 5
+            } ,
+            DP_DISCONF : {
+                "lineColor" : "blue" ,
+                "textColor" : "red"
             }
         } ,
         canvas = document.getElementById(canvasId) ,
@@ -306,11 +369,15 @@ function drawMain(sentObj , canvasId){
     // draw SRL
     SRLCanvas = createCanvasBuffer(5000 , 200) ;
     drawSRL(drawStruct , SRLCanvas) ;
+    // draw DP
+    DPCanvas = createCanvasBuffer(5000 , 200) ;
+    drawDP(drawStruct , DPCanvas ) ;
     
     canvasBufs["WS"] = WSCanvas ;
     canvasBufs["POSTAG"] = POSTAGCanvas ;
     canvasBufs["NER"] = NERCanvas ;
     canvasBufs["SRL"] = SRLCanvas ; 
+    canvasBufs["DP"] = DPCanvas ;
     
     draw(drawStruct , canvas , canvasBufs) ;
     // it using JQuery to bind the resize !
