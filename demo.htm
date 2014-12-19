@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <title>ltp analysis result display in JavaScript developping</title>
         <script type="text/javascript" src="./canvas_ex.js"> </script>
-        <script type="text/javascript" src="./draw.js"> </script>
+        <script type="text/javascript" src="./draw_obj.js"></script>
         <script type="text/javascript" src="./jquery-latest.js"> </script>
         <link rel="stylesheet" href="./bootstrap.min.css" />
         <style>
@@ -62,9 +62,11 @@
             $(document).ready(function(){
                 var rstDisplay = $("#rstDisplay") , 
                     analysisBtn ,
-                    analysis ;
+                    analysis 
+                    ;
                 
-
+                d = new Demo("canvasTest") ;
+                d.addaptWidth() ;
                 analysis = function(){
                     var requestArgs = [] ,
                     postData ,
@@ -94,7 +96,9 @@
                             //console.log(typeof returnVal) ;
                             //rstDisplay.html(returnVal[0][0][0]["cont"])
                             console.log(returnVal[0][0]) ;
-                             drawMain(returnVal[0][0] , "canvasTest") ;
+                            //drawMain(returnVal[0][0] , "canvasTest") ;
+                            d.analysis(returnVal[0][0]) ;
+                            d.paint() ;
                             
                         } ,
                         error : function(errorInfo){
@@ -106,6 +110,12 @@
                 analysis() ;
                 analysisBtn = $("#analysis") ;
                 analysisBtn.bind("click" , analysis ) ;
+                $(window).bind({
+                                "mousedown": function(e){d.downAction(e)} ,
+                                "mouseup" :  function(e){d.upAction(e) },
+                                "mousemove" : function(e){d.moveAction(e)}
+                    
+                                }) ;
             }) ;
         </script>
     </body>
