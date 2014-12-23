@@ -16,6 +16,14 @@
                 height : 500px ;
                 border : 1px solid #ccc ;
             }
+            ul li div.text-item {
+                background : #ccc ;
+            }
+            ul li div.canvasContainer {
+                width : 100% ;
+                height : 0 ;
+                overflow : hidden ;
+            }
         </style>
     </head>
     <body>
@@ -51,9 +59,20 @@
                     
                 </div> -->
                 <div class="col-sm-12" >
-                    <canvas id="canvasTest" width="500" height="500">
-                        your browser does not support canvas element
-                    </canvas>
+                    <ul class="nav" id="analysisContent">
+                        <li>
+                            <div class="text-item">段落1句子1：xxxx</div>
+                            <div class="canvasContainer" style="height:500px"><canvas >your browser does not support canvas element</canvas></div>
+                        </li>
+                        <li>
+                            <div class="text-item">段落1句子2：xxxx2</div>
+                            <div class="canvasContainer"><canvas>your browser does not support canvas element</canvas></div>
+                        </li>
+                        <li>
+                            <div class="text-item">段落1句子1：xxxx</div>
+                            <div class="canvasContainer"><canvas>your browser does not support canvas element</canvas></div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -62,11 +81,21 @@
             $(document).ready(function(){
                 var rstDisplay = $("#rstDisplay") , 
                     analysisBtn ,
-                    analysis 
+                    analysis = null ,
+                    lastOpenedEle = null ,
+                    intervalId ,
+                    getCanvasContainerFromParentSibling = null ,
+                    initDom = null ,
+                    drawCanvas = null ,
+                    switchCanvas = null ,
+                    returnAnalysisRst = null ,
+                    demo = null ,
+                    DRAW_CANVAS_ID = "canvasTest" ,
+                    DRAW_PARENT_ID = "analysisContent" , 
+                    CANVAS_HEIGHT = 500 
                     ;
                 
-                d = new Demo("canvasTest") ;
-                d.addaptWidth() ;
+                demo = new Demo(DRAW_CANVAS_ID) ;
                 analysis = function(){
                     var requestArgs = [] ,
                     postData ,
@@ -92,14 +121,14 @@
                         dataType : "jsonp" ,
                         data : postData ,
                         success : function(returnVal){
-                            //console.log(returnVal) ;
-                            //console.log(typeof returnVal) ;
-                            //rstDisplay.html(returnVal[0][0][0]["cont"])
-                            console.log(returnVal[0][0]) ;
-                            //drawMain(returnVal[0][0] , "canvasTest") ;
-                            d.analysis(returnVal[0][0]) ;
-                            d.paint() ;
-                            
+                            //d.analysis(returnVal[0][0]) ;
+                            //d.paint() ;
+                            returnAnalysisRst = returnVal ;
+                            initDom(DRAW_PARENT_ID , returnVal) ;
+                            //first , make the first text item be the lastOpenedEle to init the draw state
+                            lastOpenedEle = document.getElementById(DRAW_PARENT_ID).getElementsByTagName("DIV")[0] ;
+                            drawCanvas(lastOpenedEle) ;
+                            lastOpenedEle.parentNode.getElementsByTagName("CANVAS")[0].parentNode.style.height = CANVAS_HEIGHT + "px" ;
                         } ,
                         error : function(errorInfo){
                             console.log(errorInfo) ;
@@ -107,15 +136,103 @@
                     }) ;
                     return false ;
                 }
-                analysis() ;
                 analysisBtn = $("#analysis") ;
+                function changeDisObj(newObj , previousObj){
+                    var stepLen = 50 ,
+                        newObjOriHeight = newObj.offsetHeight ,
+                        previousObjOriHeight = previousObj.offsetHeight 
+                        ;
+                    //console.log(previousObj) ;
+                    newObj.style.height = (stepLen + newObjOriHeight ) + "px" ;
+                    previousObj.style.height = (previousObjOriHeight - stepLen ) + "px" ;
+                    if(previousObj.offsetHeight <= 0){
+                        clearInterval(intervalId) ;
+                    }
+                }
+                getCanvasContainerFromParentSibling = function(parentSibling){
+                    return parentSibling.parentNode.getElementsByTagName("CANVAS")[0].parentNode ;
+                }
+                initDom = function(parentId , sentsObj){
+                    var parentContainer = document.getElementById(parentId) ,
+                        liEle = document.createElement("LI") ,
+                        itemDivEle = document.createElement("DIV") ,
+                        canvasDivEle = document.createElement("DIV") ,
+                        canvasEle = document.createElement("CANVAS") ,
+                        eleCopy ,
+                        getSentent = null 
+                        ;
+                    while(parentContainer.childNodes.length > 0) parentContainer.removeChild(parentContainer.lastChild) ;
+                    itemDivEle.setAttribute("class" , "text-item") ;
+                    canvasDivEle.setAttribute("class" , "canvasContainer") ;
+                    canvasDivEle.appendChild(canvasEle) ;
+                    liEle.appendChild(itemDivEle) ;
+                    liEle.appendChild(canvasDivEle) ;
+                    getSentent = function(sentEle){
+                            var wsList = [] ;
+                            for(var i = 0 ; i < sentEle.length ; i++){
+                                wsList.push(sentEle[i].cont) ;
+                            }
+                            return wsList.join("") ;
+                        }
+                    for(var i = 0 ; i < sentsObj.length ; i++){
+                        for(var j = 0 ; j < sentsObj[i].length ; j++){
+                            eleCopy = liEle.cloneNode(true) ;
+                            eleCopy.firstChild.setAttribute("x" , i) ,
+                            eleCopy.firstChild.setAttribute("y" , j) ;
+                            var sentent = getSentent(sentsObj[i][j]) ;
+                            var textNode = document.createTextNode(["段落",i+1,"句子",j+1,":" , sentent].join("")) ;
+                            eleCopy.firstChild.appendChild(textNode) ;
+                            parentContainer.appendChild(eleCopy) ;
+                        }
+                    }
+                
+                }
+                drawCanvas = function(itemDivEle){
+                    var i = itemDivEle.getAttribute("x") ,
+                        j = itemDivEle.getAttribute("y") 
+                        ;
+                    //first set previous canvas 's id = ""
+                    if(lastOpenedEle != itemDivEle) lastOpenedEle.parentNode.getElementsByTagName("CANVAS")[0].setAttribute("id","") ;
+                    itemDivEle.parentNode.getElementsByTagName("CANVAS")[0].setAttribute("id" , DRAW_CANVAS_ID) ;
+                    demo.addaptWidth() ;
+                    demo.analysis(returnAnalysisRst[i][j]) ;
+                    demo.paint() ;
+                }
+                switchCanvas = function(clickedItemDivEle , previousClickedItemDivEle){
+                    if(clickedItemDivEle != previousClickedItemDivEle){
+                        //clickedItemDivEle is the text-item div , while the function changeDisObj 's param is the canvasContainer div
+                        var clickedCanvasContainer = getCanvasContainerFromParentSibling(clickedItemDivEle) ,
+                            previousCanvasContainer = getCanvasContainerFromParentSibling(previousClickedItemDivEle)
+                            ;
+                        //console.log(clickedCanvasContainer) ;
+                        //console.log(previousCanvasContainer) ;
+                        intervalId = setInterval(function(){
+                            changeDisObj(clickedCanvasContainer , previousCanvasContainer) ;
+                        }
+                        , 10) ;
+                    }
+                }
+                //---------------Event Bind----------------
                 analysisBtn.bind("click" , analysis ) ;
                 $(window).bind({
-                                "mousedown": function(e){d.downAction(e)} ,
-                                "mouseup" :  function(e){d.upAction(e) },
-                                "mousemove" : function(e){d.moveAction(e)}
+                                "mousedown": function(e){demo.downAction(e)} ,
+                                "mouseup" :  function(e){demo.upAction(e) },
+                                "mousemove" : function(e){demo.moveAction(e)}
                     
                                 }) ;
+                $("#analysisContent").bind("click" , function(e){
+                    var ele = e.target 
+                        ;
+                    if(ele.getAttribute("class") == "text-item" && ele != lastOpenedEle){
+                        drawCanvas(ele) ;
+                        (function(previousClicked){
+                            switchCanvas(ele , previousClicked) ;
+                        })(lastOpenedEle) ;
+                        lastOpenedEle = ele ;
+                    }
+                }) ;
+                //----------------First Call--------------------------
+                //analysis() ;
             }) ;
         </script>
     </body>

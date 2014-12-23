@@ -2,7 +2,8 @@
 
 
 function Demo(canvasId) {
-	this.canvas = document.getElementById(canvasId);
+    this.canvasId = canvasId ;
+	this.canvas = null ;
 	this.drawStruct = null;
 	this.canvasBufs = null;
 	this.imageData = null;
@@ -507,6 +508,8 @@ Demo.prototype = {
 	 *draw the caontainer 's image to the view port
 	 */
 	drawView : function (imageData, canvas, offsetX, offsetY) {
+        this.canvas = document.getElementById(this.canvasId) ;
+        if(this.canvas == null) return ;
 		var cxt = canvas.getContext("2d");
 		cxt.clearRect(0, 0, canvas.width, canvas.height);
 		// the parame offsetX , offsetY is the offset based on the current position , so we should translate it to the origin
@@ -528,6 +531,8 @@ Demo.prototype = {
 		this.drawView(this.imageData, this.canvas, x, y);
 	},
 	addaptWidth : function () {
+        this.canvas = document.getElementById(this.canvasId) ;
+        if(this.canvas == null) return ;
 		var parent = this.canvas.parentNode;
 		this.canvas.width = parent.offsetWidth;
 		this.canvas.height = 500;

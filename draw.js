@@ -60,8 +60,9 @@ function processSrlNode(idx , arg , drawStruct){
     else drawStruct.srl.push({"idx" : idx , "arg" : arg }) ;
     
 }
-function initDrawStruct(sentObj , drawStruct , canvas){
-    var cxt = canvas.getContext("2d") ,
+function initDrawStruct(sentObj , drawStruct){
+    var canvas = document.createElement("canvas") ,
+        cxt = canvas.getContext("2d") ,
         i ,
         preTextWidth , 
         curContPos 
@@ -92,7 +93,11 @@ function initDrawStruct(sentObj , drawStruct , canvas){
     curContPos = drawStruct.posInfo[i] + preTextWidth + drawStruct.WS_INTERVAL ;
     drawStruct.posInfo.push(curContPos) ;
     
+    //set the big canvas ' width : set to the last ws node pos
+    drawStruct.width = curContPos ;
+    
     cxt.restore() ;
+    canvas = null ; // release the reference
 }
 
 function setCanvasAppropriateHeight(canvas , startY , height){
@@ -397,6 +402,97 @@ function createCanvasBuffer(w , h){
     canvasBuf.height = h ;
     return canvasBuf ;
 }
+
+/*
+**according to the drawStruct , paint the five components
+* return value : a object contains the five components
+*/
+function drawComponent(drawStruct){
+    var WSCanvas ,
+        POSTAGCanvas ,
+        NERCanvas ,
+        SRLCanvas ,
+        DPCanvas  ,
+        canvasBufs = {}
+        ;
+     // draw WS at WSCanvas buffer
+    WSCanvas = drawWS(drawStruct ) ;
+    // draw POSTAG
+    POSTAGCanvas = drawPOSTAG(drawStruct) ;
+    // draw NER
+    NERCanvas = drawNER(drawStruct) ;
+    // draw SRL
+    SRLCanvas = drawSRL(drawStruct) ;
+    // draw DP
+    DPCanvas = drawDP(drawStruct ) ;
+
+    canvasBufs["WS"] = WSCanvas ;
+    canvasBufs["POSTAG"] = POSTAGCanvas ;
+    canvasBufs["NER"] = NERCanvas ;
+    canvasBufs["SRL"] = SRLCanvas ; 
+    canvasBufs["DP"] = DPCanvas ;
+    
+    return canvasBufs ;
+}
+/**
+*draw containers according to the five components  , and the disable attribute
+*return value : the container 's imageData
+*/
+function drawContainer(drawStruct , canvasBufs , disableAttr){
+    //set the canvas's width and height .
+    var canvas = document.createElement("canvas") ;
+    canvas.width = drawStruct.width ;
+    canvas.height = 500 ;
+    var cxt = canvas.getContext("2d") ,
+        drawBufs = {
+            "WS" : null ,
+            "POSTAG" : null ,
+            "NER" : null ,
+            "DP" : null ,
+            "SRL" : null 
+        } ,
+        offsetX = 0 ,
+        offsetY = 0 ,
+        intervalY = 10 ,
+        paintY = offsetY ,
+        drawTarget 
+        ;
+    
+    //bulid the drawBufs
+    if(typeof disableAttr == "undefined") disableAttr = {} ;
+    for(key in drawBufs){
+        drawBufs[key] = ( canvasBufs[key] === undefined || disableAttr[key] == true ) ?  "disable" : canvasBufs[key] ;
+    }
+    //first clear the canvas
+    cxt.clearRect(0,0,canvas.width , canvas.height) ;
+    
+    //draw canvasBufs to the display canvas
+    // drawImage 's first parameter can be HTMLCanvasElement , HTMLImageElement , HTMLVideoElement
+    drawTarget = ["DP","WS","POSTAG" , "NER" , "SRL"] ;
+    for(var i = 0 ; i < drawTarget.length ; i++){
+        drawCanvas = drawBufs[drawTarget[i]] ;
+        console.log(drawCanvas) ;
+        if(typeof drawCanvas == "string" && drawCanvas == "disable") continue ;
+        else if(drawCanvas == null) paintY += 3*intervalY ;
+        else {
+            cxt.drawImage(drawCanvas , offsetX , paintY) ;
+            paintY += intervalY + drawCanvas.height ;
+        }
+    }
+    setCanvasAppropriateHeight(canvas , 0 , paintY ) ;
+    drawStruct.height = paintY ;
+    return cxt.getImageData(0,0,canvas.width , canvas.height) ;
+}
+/**
+*
+*
+*/
+function drawView(imageData , canvas , offsetX , offsetY){
+    var cxt = canvas.getContext("2d")
+        ;
+    cxt.clearRect(0, 0 , canvas.width , canvas.height) ;
+    cxt.putImageData(imageData , offsetX , offsetY ) ;
+}
 function drawMain(sentObj , canvasId){
      //console.log(sentObj) ;
     
@@ -408,6 +504,8 @@ function drawMain(sentObj , canvasId){
             srl : [] ,
             dp : [] , 
             WS_INTERVAL : 40 ,
+            width : 0 ,
+            height : 0 , 
             NER_DISCONF : {
                 "ni" : {"bgcolor" : "#99ffff" , "cnName" : "机构名"} ,
                 "nh" : {"bgcolor" : "#99ff99" , "cnName" : "人名"} ,
@@ -424,26 +522,10 @@ function drawMain(sentObj , canvasId){
                 "textColor" : "red"
             }
         } ,
-        canvas = document.getElementById(canvasId) ,
-        canvasBufs = {} 
+        canvas = document.getElementById(canvasId) 
         ;   
-    initDrawStruct(sentObj , drawStruct , canvas ) ;
-    // draw WS at WSCanvas buffer
-    WSCanvas = drawWS(drawStruct ) ;
-    // draw POSTAG
-    POSTAGCanvas = drawPOSTAG(drawStruct) ;
-    // draw NER
-    NERCanvas = drawNER(drawStruct) ;
-    // draw SRL
-    SRLCanvas = drawSRL(drawStruct) ;
-    // draw DP
-    DPCanvas = drawDP(drawStruct ) ;
-    console.log(NERCanvas) ;
-    canvasBufs["WS"] = WSCanvas ;
-    canvasBufs["POSTAG"] = POSTAGCanvas ;
-    canvasBufs["NER"] = NERCanvas ;
-    canvasBufs["SRL"] = SRLCanvas ; 
-    canvasBufs["DP"] = DPCanvas ;
+    initDrawStruct(sentObj , drawStruct) ;
+   
     
     draw(drawStruct , canvas , canvasBufs) ;
     // it using JQuery to bind the resize !
