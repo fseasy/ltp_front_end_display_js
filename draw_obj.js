@@ -476,7 +476,7 @@ Demo.prototype = {
 		drawTarget;
 
 		//bulid the drawBufs
-		if (typeof disableAttr == "undefined")
+		if (typeof disableAttr == "undefined" || disableAttr == null)
 			disableAttr = {};
 		for (key in drawBufs) {
 			drawBufs[key] = (canvasBufs[key] === undefined || disableAttr[key] == true) ? "disable" : canvasBufs[key];
@@ -506,14 +506,14 @@ Demo.prototype = {
 	},
 	/**
 	 *draw the caontainer 's image to the view port
+        the x , y is the position relativing to the (0,0)
 	 */
-	drawView : function (imageData, canvas, offsetX, offsetY) {
+	drawView : function (imageData, canvas, x, y) {
         this.canvas = document.getElementById(this.canvasId) ;
         if(this.canvas == null) return ;
 		var cxt = canvas.getContext("2d");
 		cxt.clearRect(0, 0, canvas.width, canvas.height);
-		// the parame offsetX , offsetY is the offset based on the current position , so we should translate it to the origin
-		cxt.putImageData(imageData, this.offset.x + offsetX, this.offset.y + offsetY);
+		cxt.putImageData(imageData, x , y);
 	},
 	//-------------now define the API for outer ---------------
 	analysis : function (sentObj) {
@@ -522,13 +522,14 @@ Demo.prototype = {
 	},
 	update : function (disableAttr) {
 		this.drawContainer(this.drawStruct, this.canvasBufs, disableAttr);
-		this.move(this.offset.x, this.offset.y);
+		this.move(0, 0 ); 
 	},
 	paint : function () {
 		this.update();
 	},
-	move : function (x, y) {
-		this.drawView(this.imageData, this.canvas, x, y);
+	move : function (offsetX, offsetY) {
+		//offsetX , offsetY relatives to the position previous offset
+        this.drawView(this.imageData, this.canvas, this.offset.x + offsetX, this.offset.y + offsetY);
 	},
 	addaptWidth : function () {
         this.canvas = document.getElementById(this.canvasId) ;
@@ -549,13 +550,15 @@ Demo.prototype = {
 		}
 	},
 	upAction : function (e) {
-		var x = e.pageX - this.eventModule.startX,
-		y = e.pageY - this.eventModule.startY;
-		this.setOffset(x, y);
-		this.eventModule.startX = e.pageX;
-		this.eventModule.startY = e.pageY;
-		this.eventModule.hasDown = false;
-        e.target.style.cursor = "default" ;
+        if(this.eventModule.hasDown == true){
+            var x = e.pageX - this.eventModule.startX,
+            y = e.pageY - this.eventModule.startY;
+            this.setOffset(x, y);
+            this.eventModule.startX = e.pageX;
+            this.eventModule.startY = e.pageY;
+            this.eventModule.hasDown = false;
+            e.target.style.cursor = "default" ;
+        }
 	},
 	moveAction : function (e) {
 		if (this.eventModule.hasDown == true) {
