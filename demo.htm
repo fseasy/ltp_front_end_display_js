@@ -6,8 +6,13 @@
         <script type="text/javascript" src="./canvas_ex.js"> </script>
         <script type="text/javascript" src="./draw_obj.js"></script>
         <script type="text/javascript" src="./jquery-latest.js"> </script>
+        <script type="text/javascript" src="./tab.js"> </script>
         <link rel="stylesheet" href="./bootstrap.min.css" />
         <style>
+            *{
+                margin: 0 ;
+                padding : 0 ;
+            }
             .bg-blue{
                 background-color : #0061c2 ;
                 color : #FFFFFF ;
@@ -16,13 +21,39 @@
                 height : 500px ;
                 border : 1px solid #ccc ;
             }
-            ul li div.text-item {
-                background : #ccc ;
+            .analysis-wrapper{
+                border : 1px solid #ccc ;
+                border-radius : 10px ;
+                min-height : 500px ;
             }
-            ul li div.canvasContainer {
+            .analysis-wrapper ul li {
+                list-style : none ;
+                padding:5px 4px ;
+            }
+            .analysis-wrapper ul li div.text-item {
+                border-bottom:1px solid #ccc ;
+                border-left : 3px solid #0099cc ;
+                padding : 8px 5px ;
+                cursor : pointer ;
+            }
+            .analysis-wrapper ul li div.canvasContainer {
                 width : 100% ;
                 height : 0 ;
                 overflow : hidden ;
+            }
+            
+            .dis-wrapper{
+                background: #f8f8f8 ;
+                padding-top : 20px ;
+            }
+            .keep-width-80p{
+                width : 80% ;
+            }
+            .keep-margin-top-10px{
+                margin-top:10px ;
+            }
+            .keep-margin-top-20px {
+                margin-top : 20px ;
             }
         </style>
     </head>
@@ -42,7 +73,8 @@
                 <p>a new display for ltp-cloud . It is now in developping progress ! </p>
             </div>
         </div>
-        <div class="container">
+        <div class="container dis-wrapper">
+            <!--
             <form class="form-horizontal" role="form">
                 <div class="form-group">
                     <label for="inputText" class="sr-only">input text</label>
@@ -55,9 +87,6 @@
                 </div>
             </form>
             <div class="row">
-                <!--<div class="col-sm-12 result-display" id="rstDisplay">
-                    
-                </div> -->
                 <div class="col-sm-12" >
                     <ul class="nav" id="analysisContent">
                         <li>
@@ -75,164 +104,130 @@
                     </ul>
                 </div>
             </div>
+            -->
+            <div class="row">
+                <div class="col-sm-10">
+                    <textarea  class="form-control" rows=4 id="inputText">我是中国人。</textarea>
+                </div>
+                <div class="col-sm-2">
+                    <div class="row">
+                        <div class="col-sm-offset-2 col-sm-8 clearfix">
+                            <select class="form-control" >
+                                <option value="singleSentence">单句</option>
+                                <option value="multipleSentence">复句</option>
+                                <option value="paraPolity">政治-段落</option>
+                                <option value="paraSports">体育-段落</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row keep-margin-top-10px">
+                        <div class="col-sm-offset-2 col-sm-8 clearfix">
+                            <button type="button" class="btn btn-default btn-sm btn-block" id="analysis">分析</button>
+                        </div>
+                    </div>
+                     
+                </div>
+            </div>
+            <div class="row keep-margin-top-20px">
+                <div class="col-sm-10">
+                    <ul class="nav nav-tabs" role="tablist" id="viewTab">
+                        <li role="presentation" class="active">
+                            <a id="sent-tab" role="tab" aria-expanded="true" aria-controls="sent" href="#sent" data-toggle="tab">句子视图</a>
+                        </li>
+                        <li role="presentation" >
+                            <a id="para-tab" role="tab" aria-expanded="true" aria-controls="para" href="#para" data-toggle="tab">篇章视图</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-sm-2">
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-default">显示XML</button>
+                                <button type="button" class="btn btn-default">加载本地</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content" id="viewContent">
+                <div class="tab-pane fade active in" id="sent" role="tabpanel" aria-labelledby="sent-tab">
+                    <div class="row">
+                        <div class="col-sm-6 checkbox clearfix" id="disableAttrPanel">
+                            <label>
+                                <input type="checkbox" value="postag-enable" checked>
+                                词性标注
+                            </label>
+                            <label>
+                                <input type="checkbox" value="ner-enable" checked>
+                                命名实体
+                            </label>
+                            <label>
+                                <input type="checkbox" value="dp-enable" checked>
+                                句法分析
+                            </label>
+                            <label>
+                                <input type="checkbox" value="srl-enable" checked>
+                                语义角色标注
+                            </label>
+                        </div>
+                        
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="analysis-wrapper">
+                                <ul id="analysisContent">
+                                    <li>
+                                       <div class="text-item">我是中国人。</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="para" role="tabpanel" aria-labelledby="para-tab">
+                    <div class="row">
+                        <div class="col-sm-6 radio clearfix" id="paraSelPanel">
+                            <label>
+                                <input type="radio" name="paraDisItem" value="para-originWord" >
+                                原句
+                            </label>
+                            <label>
+                                <input type="radio" name="paraDisItem" value="para-ws" checked>
+                                分词
+                            </label>
+                            <label>
+                                <input type="radio" name="paraDisItem" value="para-postag">
+                                词性标注
+                            </label>
+                            <label>
+                                <input type="radio" name="paraDisItem" value="para-ner">
+                                命名实体
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="analysis-wrapper">
+                                <div id="paraContent">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
+        <script type="text/javascript" src="./draw_load.js"></script>
         <script type="text/javascript">
-            $(document).ready(function(){
-                var rstDisplay = $("#rstDisplay") , 
-                    analysisBtn ,
-                    analysis = null ,
-                    lastOpenedEle = null ,
-                    intervalId ,
-                    getCanvasContainerFromParentSibling = null ,
-                    initDom = null ,
-                    drawCanvas = null ,
-                    switchCanvas = null ,
-                    returnAnalysisRst = null ,
-                    demo = null ,
-                    DRAW_CANVAS_ID = "canvasTest" ,
-                    DRAW_PARENT_ID = "analysisContent" , 
-                    CANVAS_HEIGHT = 500 
-                    ;
+            $(function(){
+                $("#viewTab a").click(function(e){
+                    e.preventDefault() ;
+                    $(this).tab('show') ;
                 
-                demo = new Demo(DRAW_CANVAS_ID) ;
-                analysis = function(){
-                    var requestArgs = [] ,
-                    postData ,
-                    targetURL ;
-                    
-                    requestArgs["api_key"] = "U2G658z15u6Q4RpksQHC9KDevunLIypIHc5nPr5U" ;
-                    requestArgs["pattern"] = "all" ;
-                    requestArgs["format"] = "json" ;
-                    requestArgs["text"] = encodeURI($("#inputText").val()) ;
-                    postData = (function(){
-                            var tmpStrArray = [] ;
-                            for (key in requestArgs) {
-                                tmpStrArray.push([key , requestArgs[key]].join("=")) ;
-                            }
-                            return tmpStrArray.join("&") ;
-                    })() ;
-                    targetURL = "http://ltpapi.voicecloud.cn/analysis/"
-                    //ajax
-                    $.ajax({
-                        url : targetURL ,
-                        type : "POST" ,
-                        async : false ,
-                        dataType : "jsonp" ,
-                        data : postData ,
-                        success : function(returnVal){
-                            //d.analysis(returnVal[0][0]) ;
-                            //d.paint() ;
-                            returnAnalysisRst = returnVal ;
-                            initDom(DRAW_PARENT_ID , returnVal) ;
-                            //first , make the first text item be the lastOpenedEle to init the draw state
-                            lastOpenedEle = document.getElementById(DRAW_PARENT_ID).getElementsByTagName("DIV")[0] ;
-                            drawCanvas(lastOpenedEle) ;
-                            lastOpenedEle.parentNode.getElementsByTagName("CANVAS")[0].parentNode.style.height = CANVAS_HEIGHT + "px" ;
-                        } ,
-                        error : function(errorInfo){
-                            console.log(errorInfo) ;
-                        }
-                    }) ;
-                    return false ;
-                }
-                analysisBtn = $("#analysis") ;
-                function changeDisObj(newObj , previousObj){
-                    var stepLen = 50 ,
-                        newObjOriHeight = newObj.offsetHeight ,
-                        previousObjOriHeight = previousObj.offsetHeight 
-                        ;
-                    //console.log(previousObj) ;
-                    newObj.style.height = (stepLen + newObjOriHeight ) + "px" ;
-                    previousObj.style.height = (previousObjOriHeight - stepLen ) + "px" ;
-                    if(previousObj.offsetHeight <= 0){
-                        clearInterval(intervalId) ;
-                    }
-                }
-                getCanvasContainerFromParentSibling = function(parentSibling){
-                    return parentSibling.parentNode.getElementsByTagName("CANVAS")[0].parentNode ;
-                }
-                initDom = function(parentId , sentsObj){
-                    var parentContainer = document.getElementById(parentId) ,
-                        liEle = document.createElement("LI") ,
-                        itemDivEle = document.createElement("DIV") ,
-                        canvasDivEle = document.createElement("DIV") ,
-                        canvasEle = document.createElement("CANVAS") ,
-                        eleCopy ,
-                        getSentent = null 
-                        ;
-                    while(parentContainer.childNodes.length > 0) parentContainer.removeChild(parentContainer.lastChild) ;
-                    itemDivEle.setAttribute("class" , "text-item") ;
-                    canvasDivEle.setAttribute("class" , "canvasContainer") ;
-                    canvasDivEle.appendChild(canvasEle) ;
-                    liEle.appendChild(itemDivEle) ;
-                    liEle.appendChild(canvasDivEle) ;
-                    getSentent = function(sentEle){
-                            var wsList = [] ;
-                            for(var i = 0 ; i < sentEle.length ; i++){
-                                wsList.push(sentEle[i].cont) ;
-                            }
-                            return wsList.join("") ;
-                        }
-                    for(var i = 0 ; i < sentsObj.length ; i++){
-                        for(var j = 0 ; j < sentsObj[i].length ; j++){
-                            eleCopy = liEle.cloneNode(true) ;
-                            eleCopy.firstChild.setAttribute("x" , i) ,
-                            eleCopy.firstChild.setAttribute("y" , j) ;
-                            var sentent = getSentent(sentsObj[i][j]) ;
-                            var textNode = document.createTextNode(["段落",i+1,"句子",j+1,":" , sentent].join("")) ;
-                            eleCopy.firstChild.appendChild(textNode) ;
-                            parentContainer.appendChild(eleCopy) ;
-                        }
-                    }
-                
-                }
-                drawCanvas = function(itemDivEle){
-                    var i = itemDivEle.getAttribute("x") ,
-                        j = itemDivEle.getAttribute("y") 
-                        ;
-                    //first set previous canvas 's id = ""
-                    if(lastOpenedEle != itemDivEle) lastOpenedEle.parentNode.getElementsByTagName("CANVAS")[0].setAttribute("id","") ;
-                    itemDivEle.parentNode.getElementsByTagName("CANVAS")[0].setAttribute("id" , DRAW_CANVAS_ID) ;
-                    demo.addaptWidth() ;
-                    demo.analysis(returnAnalysisRst[i][j]) ;
-                    demo.paint() ;
-                }
-                switchCanvas = function(clickedItemDivEle , previousClickedItemDivEle){
-                    if(clickedItemDivEle != previousClickedItemDivEle){
-                        //clickedItemDivEle is the text-item div , while the function changeDisObj 's param is the canvasContainer div
-                        var clickedCanvasContainer = getCanvasContainerFromParentSibling(clickedItemDivEle) ,
-                            previousCanvasContainer = getCanvasContainerFromParentSibling(previousClickedItemDivEle)
-                            ;
-                        //console.log(clickedCanvasContainer) ;
-                        //console.log(previousCanvasContainer) ;
-                        intervalId = setInterval(function(){
-                            changeDisObj(clickedCanvasContainer , previousCanvasContainer) ;
-                        }
-                        , 10) ;
-                    }
-                }
-                //---------------Event Bind----------------
-                analysisBtn.bind("click" , analysis ) ;
-                $(window).bind({
-                                "mousedown": function(e){demo.downAction(e)} ,
-                                "mouseup" :  function(e){demo.upAction(e) },
-                                "mousemove" : function(e){demo.moveAction(e)}
-                    
-                                }) ;
-                $("#analysisContent").bind("click" , function(e){
-                    var ele = e.target 
-                        ;
-                    if(ele.getAttribute("class") == "text-item" && ele != lastOpenedEle){
-                        drawCanvas(ele) ;
-                        (function(previousClicked){
-                            switchCanvas(ele , previousClicked) ;
-                        })(lastOpenedEle) ;
-                        lastOpenedEle = ele ;
-                    }
                 }) ;
-                //----------------First Call--------------------------
-                //analysis() ;
+            
             }) ;
         </script>
     </body>
