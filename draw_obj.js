@@ -100,7 +100,7 @@ Demo.prototype = {
 			startY : 0,
 			hasDown : false
 		};
-		this.drawStruct.texts.push("Root");
+		this.drawStruct.texts.push("Root"); // ---- it is not correct ! the "Root" is drawed at DP while not at WS !! but it become difficult to modify it - -
 		this.drawStruct.posInfo.push(0);
 		this.drawStruct.postag.push(""); // For align the texts and posInfo , push a empty str to the postag array
 		cxt.save();
@@ -498,6 +498,10 @@ Demo.prototype = {
 				paintY += intervalY + drawCanvas.height;
 			}
 		}
+        // fix the 'Root' BUG
+        if(drawBufs["DP"] == null || drawBufs["DP"] == "disable"){
+            cxt.clearRect(0,0,drawStruct.posInfo[1] - drawStruct.WS_INTERVAL,paintY) ;
+        }
 		this.setCanvasAppropriateHeight(canvas, 0, paintY);
 		// set drawStruct 's height
 		this.drawStruct.height = paintY;
@@ -516,10 +520,12 @@ Demo.prototype = {
 		cxt.putImageData(imageData, x , y);
 	},
 	//-------------now define the API for outer ---------------
+        // init the drawStruct , component
 	analysis : function (sentObj) {
 		this.initDrawStruct(sentObj);
 		this.drawComponent(this.drawStruct);
 	},
+        //get the imageData and move to offset(0,0)
 	update : function (disableAttr) {
 		this.drawContainer(this.drawStruct, this.canvasBufs, disableAttr);
 		this.move(0, 0 ); 
@@ -527,6 +533,7 @@ Demo.prototype = {
 	paint : function () {
 		this.update();
 	},
+        //move to offset(x,y)
 	move : function (offsetX, offsetY) {
 		//offsetX , offsetY relatives to the position previous offset
         this.drawView(this.imageData, this.canvas, this.offset.x + offsetX, this.offset.y + offsetY);
@@ -535,6 +542,7 @@ Demo.prototype = {
         this.canvas = document.getElementById(this.canvasId) ;
         if(this.canvas == null) return ;
 		var parent = this.canvas.parentNode;
+        if(parent.offsetWidth == 0) return ;
 		this.canvas.width = parent.offsetWidth;
 		this.canvas.height = 500;
 	},

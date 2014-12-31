@@ -1,0 +1,82 @@
+*{
+    margin: 0 ;
+    padding : 0 ;
+}
+#mask {
+    width : 100% ;
+    min-height : 500px ;
+    border-top : 1px solid #ccc ;
+    margin : 10px 0 ;
+    padding : 40px 20px ;
+    font-size : 18px ;
+    position : relative ;
+}
+#mask #loadingTag{
+    font-size : 14px ;
+    position : absolute ;
+    top : 230px ;
+    left : 300px ;
+    display : none ;
+}
+#analysisPanel {
+    display : none ;
+}
+.analysis-wrapper{
+    background : #fff ;
+    border : 1px solid #ccc ;
+    border-radius : 10px ;
+    min-height : 500px ;
+}
+.analysis-wrapper ul li {
+    list-style : none ;
+    padding:5px 4px ;
+}
+.analysis-wrapper ul li div.text-item {
+    border-bottom:1px solid #ccc ;
+    border-left : 3px solid #0099cc ;
+    padding : 8px 5px ;
+    cursor : pointer ;
+}
+.analysis-wrapper ul li div.canvasContainer {
+    width : 100% ;
+    height : 0 ;
+    overflow : hidden ;
+}
+#paraContent{
+    padding-left : 20px ;
+    padding-top : 10px ;
+    font-size : 16px ;
+}
+#paraNerIntro {
+    background: #f8f8f8 ;
+    padding : 10px 20px ;
+    border-radius :  0 0  10px 10px ;
+    height : 40px ;
+    border-top : 1px solid #ccc ;
+}
+#paraNerIntro label {
+    line-height : 20px ;
+    font-weight : normal ;
+}
+#paraNerIntro label .box{
+    width : 20px ;
+    height : 20px ;
+    border-radius : 3px ;
+    display : block ;
+    margin: 0 5px 0 15px;
+    float : left ;
+}
+.dis-wrapper{
+    background: #f8f8f8 ;
+    padding-top : 20px ;
+ 
+}
+.keep-width-80p{
+    width : 80% ;
+}
+.keep-margin-top-10px{
+    margin-top:10px ;
+}
+.keep-margin-top-20px {
+    margin-top : 20px ;
+}
