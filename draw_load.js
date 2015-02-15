@@ -1,4 +1,6 @@
+
 $(document).ready(function () {
+
     //-----main view-----
 	var analysisBtn, // the button for active analysis
 	analysis = null, // function to start analysis
@@ -78,13 +80,15 @@ $(document).ready(function () {
 				success : function (returnVal) {
 					returnAnalysisRst = returnVal;
 					initDom(DRAW_PARENT_ID, returnVal);
-					//active the sent view
-					$("#sent-tab").tab('show');
+					
+                    
 					//init the sent view
 
 					//update UI ! it is necessary to update it before drawing the canvas
 					maskObj.style.display = "none";
 					analysisPanel.style.display = "block";
+                    //active the sent view
+					$("#sent-tab").tab('show');
 					//first , make the first text item be the lastOpenedEle to init the draw state
 					lastOpenedEle = document.getElementById(DRAW_PARENT_ID).getElementsByTagName("DIV")[0];
 					drawCanvas(lastOpenedEle);
@@ -321,6 +325,7 @@ $(document).ready(function () {
 			box.setAttribute("class", "box");
 			introItem.appendChild(box);
 			introItem.appendChild(textNode);
+            introItem.setAttribute("class" , "inline") ;
 			paraNerIntroDomObj.appendChild(introItem);
 		}
 	}
