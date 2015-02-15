@@ -488,7 +488,7 @@ Demo.prototype = {
 		// drawImage 's first parameter can be HTMLCanvasElement , HTMLImageElement , HTMLVideoElement
 		drawTarget = ["DP", "WS", "POSTAG", "NER", "SRL"];
 		for (var i = 0; i < drawTarget.length; i++) {
-			drawCanvas = drawBufs[drawTarget[i]];
+			var drawCanvas = drawBufs[drawTarget[i]];
 			if (typeof drawCanvas == "string" && drawCanvas == "disable")
 				continue;
 			else if (drawCanvas == null)
