@@ -43,12 +43,17 @@ Demo.prototype = {
 	processSrlNode : function (idx, arg, drawStruct) {
 		if (arg.length == 0)
 			return; // if node has no arg , the arg should be a empty array
-		else
-			drawStruct.srl.push({
+		else{
+            for(var i = 0 ; i < arg.length ; i++){
+                arg[i]['beg'] = parseInt(arg[i]['beg']) ;
+                arg[i]['end'] = parseInt(arg[i]['end']) ; // fix the BUG when the arg.beg and arg.end is the numeric string
+			    arg[i]['id'] = parseInt(arg[i]['id']) ;
+            }
+            drawStruct.srl.push({
 				"idx" : idx,
 				"arg" : arg
 			});
-
+        }
 	},
 	initDrawStruct : function (sentObj) {
 		var canvas = document.createElement("canvas"),
@@ -119,8 +124,8 @@ Demo.prototype = {
 			this.processSrlNode(i, sentObj[i]["arg"], this.drawStruct); // do not (i+1) !!
 			//process dp
 			this.drawStruct.dp.push({
-				"from" : sentObj[i].parent,
-				"to" : i,
+				"from" : parseInt(sentObj[i].parent),
+				"to" : parseInt(i) ,
 				"relate" : sentObj[i].relate
 			});
 		}

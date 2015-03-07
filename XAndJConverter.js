@@ -11,6 +11,9 @@
  *  xml 2 String
  **      String parseXMLDOM2String( XMLDOM )
  *
+ *  string 2 XML
+ **      XMLDOM parseString2XMLDOM( string )
+
  *  format xmlString for Display in textarea
  **      String formatDOMStrForDisplay( String )
 **/

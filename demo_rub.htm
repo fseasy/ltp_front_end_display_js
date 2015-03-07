@@ -101,6 +101,9 @@
                                 <li role="presentation" >
                                     <a id="para-tab" role="tab" aria-expanded="true" aria-controls="para" href="#para" data-toggle="tab">篇章视图</a>
                                 </li>
+                                <li role="presentation">
+                                    <a id="xml-tab" role="tab" aria-expanded="true" aria-controls="xml" href="#xml" data-toggle="tab">XML视图</a>
+                                </li>
                             </ul>
                         </div>
                         <div class="span2" style=" display : none ;">
@@ -176,6 +179,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="xml" role="tabpanel" aria-labelledby="xml-tab">
+                            <div class="row-fluid">
+                                <div class="span2">
+                                    <button class="btn btn-default btn-small form-control" id="load-local-xml-btn">加载当前XML</button>
+                                </div>
+                                <div class="span10">
+                                     <p class="text-info" style="padding-top:10px ; ">可以在以下编辑框中修改XML，然后点击该按钮，待重新解析完成后选择“句子视图”或“篇章视图”查看效果</p>
+                                </div>
+                            </div>
+                            <div class="row-fluid" style="margin-top:10px ;">
+                                <div class="span12">
+                                    <textarea style="width:100% ; height:500px ; color:#000 ;" id="xml_area"></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>                    
             </div>
@@ -218,6 +236,7 @@
         <script type="text/javascript" src="./draw_obj.js"></script>
         <script type="text/javascript" src="./draw_sent_view.js"></script>
         <script type="text/javascript" src="./draw_para_view.js"></script>
+        <script type="text/javascript" src="./XAndJConverter.js"></script>
         <script type="text/javascript" src="./draw_load.js"> </script>
         <!-- 
         <script>

@@ -7,6 +7,8 @@ $(document).ready(function () {
 	var analysisBtn, // the button for active analysis
 	analysis = null, // function to start analysis
     readySentView = null , // function to set the sent view 
+    readyXmlView = null ,
+    readyParaView = null ,
 	maskObj = document.getElementById("mask"),
 	manualObj = document.getElementById("usingManual"),
 	loadingObj = document.getElementById("loadingTag"),
@@ -50,7 +52,10 @@ $(document).ready(function () {
             data : postData,
             success : function (returnVal) {
                 returnAnalysisRst = returnVal;
-                readySentView(returnVal) ;
+                //sent view update
+                readySentView() ;
+                //xml view update
+                readyXmlView(returnVal) ;
             },
             error : function (errorInfo) {
                 console.log(errorInfo);
@@ -69,8 +74,8 @@ $(document).ready(function () {
 		return false;
 	}
 	
-    readySentView = function(returnJsonObj){
-        initDom(DRAW_PARENT_ID, returnJsonObj); //init the sent view
+    readySentView = function(){
+        initDom(DRAW_PARENT_ID, returnAnalysisRst); //init the sent view
         //update UI ! it is necessary to update it before drawing the canvas
         maskObj.style.display = "none";
         analysisPanel.style.display = "block";
@@ -82,6 +87,17 @@ $(document).ready(function () {
         lastOpenedEle.parentNode.getElementsByTagName("CANVAS")[0].parentNode.style.height = CANVAS_HEIGHT + "px"; // important ! subsequent switching animate rely on this setting
     }
     
+    readyParaView = function(){
+        // has build a bad function ! - -
+        selectParaPartToDrawByValue($("input[name=paraDisItem]:checked").val());
+    }
+    readyXmlView = function(returnJsonObj){
+        var xmlDOM = LTPRstParseJSON2XMLDOM(returnJsonObj) ,
+            str = parseXMLDOM2String(xmlDOM) ,
+            formatedStr = formatDOMStrForDisplay(str) ;
+        $("#xml_area").val(formatedStr) ;
+    }
+
 	setLoadingPos = function () {
 		var parentNode = maskObj,
 		pWidth = parentNode.offsetWidth,
@@ -117,12 +133,22 @@ $(document).ready(function () {
         textareaEnterNum = getEnterNumFromStr(SELECT_SENTS[$(this).val()]) ;
     })
     
+    $("#load-local-xml-btn").bind("click" , function(e){
+        var localXML = parseString2XMLDOM($("#xml_area").val()) ,
+            localJson = LTPRstParseXMLDOM2JSON( localXML ) ;
+        if(localJson != [] && localJson != undefined){
+            returnAnalysisRst = localJson ;
+            readySentView() ;
+        }        
+        return false ;    
+    })
     $(window).bind("resize" , function(e){
         if(demo != null){
             demo.move(0,0) ;
         }
         setLoadingPos() ;
     }) ;
+    /*
     $("#inputText").bind({
         "keyup" : function(e){
             var keyChar = String.fromCharCode(e.keyCode) ;
@@ -139,6 +165,7 @@ $(document).ready(function () {
             else $(this).attr("rows" , 4) ;
         }
     }) ;
+    */
 	//----------------First Call--------------------------
 	//analysis() ;
 	initNerIntro();
