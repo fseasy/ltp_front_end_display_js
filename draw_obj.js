@@ -74,7 +74,7 @@ Demo.prototype = {
 			NER_DISCONF : {
 				"ni" : {
 					"bgcolor" : "#99ffff",
-					"cnName" : "机构名"
+					"cnName" : "机构"
 				},
 				"nh" : {
 					"bgcolor" : "#99ff99",
@@ -258,7 +258,6 @@ Demo.prototype = {
 		cxt.fillStyle = bgColor;
 		paintX = drawStruct.posInfo[nerNode.startIdx] - drawStruct.WS_INTERVAL / 2;
 		paintWidth = drawStruct.posInfo[nerNode.endIdx + 1] - drawStruct.posInfo[nerNode.startIdx];
-
 		cxt.fillRect(paintX, paintY, paintWidth, paintHeight);
 		//draw text
 		this.setTextFillStyle(cxt);
@@ -276,7 +275,7 @@ Demo.prototype = {
 	drawNER : function (drawStruct) {
 		if (drawStruct.ner.length == 0)
 			return null;
-		var canvas = this.createCanvasBuffer(500, 50),
+		var canvas = this.createCanvasBuffer(5000, 50),
 		cxt = canvas.getContext("2d"),
 		i,
 		height;
@@ -292,6 +291,8 @@ Demo.prototype = {
 
 		var lineStartPos,
 		lineEndPos,
+        startIdx ,
+        endIdx ,
 		lineY,
 		textX,
 		textY,
@@ -304,8 +305,12 @@ Demo.prototype = {
 		paintY = drawIdx * (paintHeight + paintInterval);
 		//first , draw line
 		cxt.save();
-		lineStartPos = drawStruct.posInfo[srlNode.arg[0].beg + 1] - drawStruct.WS_INTERVAL / 2;
-		lineEndPos = drawStruct.posInfo[srlNode.arg[argLen - 1].end + 1 + 1] - drawStruct.WS_INTERVAL / 2; // first +1 because the posInfo has a more node for "Root" ,
+		// Atention ! the arg[0].beg may not be the first of the line . Because the `verb` may be the first
+        startIdx = srlNode.idx < srlNode.arg[0].beg ? srlNode.idx : srlNode.arg[0].beg ;
+        lineStartPos = drawStruct.posInfo[startIdx  + 1] - drawStruct.WS_INTERVAL / 2;
+        // Atention! the arg[-1].end may not be the end of the line . because the `verb` may be the last
+        endIdx = srlNode.idx > srlNode.arg[argLen -1].end ? srlNode.idx : srlNode.arg[argLen -1].end ;
+		lineEndPos = drawStruct.posInfo[endIdx + 1 + 1] - drawStruct.WS_INTERVAL / 2; // first +1 because the posInfo has a more node for "Root" ,
 		//second +1 for the right position is in the next node
 		lineY = paintY + paintHeight - drawStruct.SRL_DISCONF.lineWidth;
 		cxt.strokeStyle = drawStruct.SRL_DISCONF.lineColor;
@@ -409,7 +414,7 @@ Demo.prototype = {
 	drawDP : function (drawStruct) {
 		if (drawStruct.dp.length == 0)
 			return null;
-		var canvas = this.createCanvasBuffer(5000, 500),
+		var canvas = this.createCanvasBuffer(5000, 5000),
 		cxt = canvas.getContext("2d"),
 		i,
 		minY = canvas.height,
@@ -465,7 +470,7 @@ Demo.prototype = {
 		//set the canvas's width and height .
 		var canvas = document.createElement("canvas");
 		canvas.width = drawStruct.width;
-		canvas.height = 500;
+		canvas.height = 5000;
 		var cxt = canvas.getContext("2d"),
 		drawBufs = {
 			"WS" : null,
