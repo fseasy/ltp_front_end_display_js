@@ -211,7 +211,7 @@
     
 - draw_obj.js
 
-    原始LTP server 返回的json对象分析：
+    **原始LTP server 返回的json对象分析：**
     
         [ -> 这是JSON开始 ， 里面包含N个片段对象
         
@@ -260,7 +260,23 @@
         ]   
     
     
+    **变量**
     
+    对象Demo 
+    
+    其中包含的关键数据对象：
+    
+    drawStruct : 用于存储绘制信息的对象
+    
+    imageData : 绘制的图像数据，用于快速移动
+    
+    offset ： 存储`相对原点`，即上次绘制的起点坐标。以canvas(0,0)为参照系。
+    
+    eventModule ： 存储鼠标按下、移动中的事件信息，包含按下时的坐标信息，以及是否按下的状态。
+    
+    **函数：**
+    
+    **输入数据预处理——构建绘制信息对象drawStruct**
     
     processNerNode : 预处理Ner节点。 从原始较为分离的信息变为更加整合的对象: 
         
@@ -283,7 +299,9 @@
         ]
     
     
-    initDrawStruct : 预处理ltp server 返回的json对象。 构建一个drawStruct对象，把分词、词性标注、命名实体识别、依存句法分析、语义角色对象从原始的基于每个词的属性变为按照各类别组织。该结构体为：
+    initDrawStruct : 预处理ltp server 返回的json对象。 
+
+    构建一个drawStruct对象，把分词、词性标注、命名实体识别、依存句法分析、语义角色对象从原始的基于每个词的属性变为按照各类别组织。该结构体为：
     
         drawStruct = {
             posInfo : [],
@@ -321,9 +339,129 @@
             }
         }
     
-    其中还增加了一些绘图的信息，如postInfo为每个词的位置信息，**NER_DISCONF** , SRL_DISCONF , DP_DISCONF 等。
+    其中还增加了一些其他绘制的信息，如postInfo为每个词的位置信息，**NER_DISCONF** , SRL_DISCONF , DP_DISCONF 等。
     
-    特别的，由于画DP时有root节点，所以在texts中首先加入了“ROOT”这个词，这样便于画DP以及位置规整。但是这个也留下了一些问题——首先是索引改变（相当于多了一个词），这个注意一下问题不大。然后是当我们不选择不绘制dp的时候，分词结果应该是不会再出现“root”的，这里采取的措施是比较ugly的方法，直接在“root”的位置再绘了一个白块给覆盖了。
+    接下来说明该绘画数据对象的构造流程：
+    
+    函数输入为returnAnalysisVal中的某个一个句子对象。我们要遍历这个句子对象，构建用于存储绘图信息的drawStruct。
+    
+    在遍历句子对象之前，有一些初始操作：
+    
+    首先，由于画DP时有root节点，所以在texts中首先加入了“ROOT”这个词，这样便于画DP以及位置规整。（但是这个也留下了一些问题——首先是索引改变（相当于多了一个词），这个注意一下问题不大。然后是当我们不选择不绘制dp的时候，分词结果应该是不会再出现“root”的，这里采取的措施是比较ugly的方法，直接在“root”的位置再绘了一个白块给覆盖了。）
+    
+    在texts中加入“Root”之后，还要在posInfo中加入一个0，表示第一个词起始绘制位置为0.
+    
+    为了对应texts，还给postag放入一个空白字符（一切都是为了一致性）。
+    
+    初始操作之后，开始遍历句子对象，即returnAnalysisVal[i][j] 。
+    
+    首先把每个unigram对象的cont放到texts中，然后用contex的measureText函数确定上一个字符的宽度，再加上间隔，就是该字符的绘制位置。将其放入到posInfo中。接着把postag信息直接放入postag中。调用processNerNode处理该节点的ner信息，调用srlNode处理srl信息，处理dp时，构建对象
+    
+        {
+            from : "parent" ,
+            to : "id" ,
+            relate : "relate"
+        }
+    
+    最后，计算最后一个字符的结束位置，放入posInfo中。
+    
+    **字体处理函数**
+    
+    setTextFont 
+    
+    setEnTextFont 
+    
+    setCnTextFont
+    
+    setTextFillStyle 
+    
+    getFontSizeFromFontstr
+    
+    getTextLineheightAndPaintHeight 
+    
+    **canvas处理函数**
+    
+    setCanvasAppropriateHeight : 根据canvas内容实际占据的大小，把内容居左上，将canvas设置为其恰好的大小。
+    
+    createCanvasBuffer : 创建一个canvas缓冲区
+    
+    **绘制函数**
+    
+    drawWS : 根据posInfo和texts绘制分词，返回一个恰当大小的canvas对象。
+    
+    drawPOSTAG : 与画分词类似。
+    
+    drawNerNode : 绘制一个NER节点，先绘制背景颜色，再绘制文字。
+    
+    drawNER : 循环调用drawNerNode ，绘制全部的节点。如果唔ner对象，返回null。
+    
+    drawSrlNode : 绘制Srl节点。先绘值该语义动作的基线，首先要确定其实位置和结束位置。由于arg里是按序排列的，那么arg里第一个元素的beg和最后一个元素的end指向的索引可能是基线的开始和结束位置。但是还要和核心词的位置进行比较，当核心词在开头或结尾时，基线的开始或结尾由核心词位置决定。 接着画核心词，最后画其他语义角色。先绘制圆角矩形的背景，然后绘制文字（type）。
+    
+    drawSRL : 循环调用drawNerNode.如果无srl元素，返回null。
+    
+    drawDpNode : 绘制dp弧。使用三节贝塞尔曲线。关于贝塞尔曲线的绘制原理，参看 [贝塞尔曲线扫盲](http://www.html-js.com/article/1628) .三阶需要四个点，move to一个点，然后函数指定另外三个点。这四个点围成了一个矩形，宽度是这两个词的距离X，高度设为Y = X*13 + 10 ，这个是参考原始Falsh曲线的高度，多次试出来的结果。这样画出来的贝塞尔曲线，最高点坐标为(X/2 , Y * 3 / 4 ) 。我们要在这个点这里绘制关系字符。最后，再绘制箭头，这里要根据from、to的左右关系决定向箭头向哪边梢偏。
+    
+    drawDP : 循环绘制DP节点。每个词语节点，其父元素是唯一的，故将父元素到该元素的曲线绘制落点设置为词的中心位置，其余则放到该位置的两边。每次只绘制父亲节点到该节点这一条曲线即可。
+    
+    **绘制层次**
+    
+    首先需要分析引起重绘的动作：
+    
+    1. 查看某个句子的分析结果（句子元素点击操作） —— 全部重绘
+
+    2. 选择查看该句子的部分分析结果（绘制元素选择操作） —— 只需改变绘制到视口的元素即可
+    
+    3. 移动绘图（鼠标点击拖动）—— 只需改变位置即可
+    
+    由上，把绘制动作依据前端操作的不同分为了三个层次。为了实现这三个层次，我们就需要在后端为每个部分单独绘制一个canvas缓冲区；然后当选择部分结果显示时，就把需要的部分拷贝到视口即可；当拖动鼠标时，只需改变视口内元素的位置即可。
+    
+    故设计了如下的3层API :
+    
+    drawComponent : 针对一个句子，单独绘制各个部分的缓冲，并将其保存起来。
+    
+    drawContainer : 根据draw_sent_view得到的disableAttr选择需要展示的元素，将其缓冲元素复制到container中。**注意，在这里完成了前面提到的关于root节点绘制的问题。当我们不绘制dp部分时，我们要在root的位置多绘制一块白块（在实现时，用的清除操作），覆盖住ws绘制的root节点。**
+    
+    drawView : 绘制视口图像。将container中的图像从视口中以(X,Y)为原点的地方开始复制。
+    
+    **外部调用API**
+    
+    analysis : 输入ltp server 返回的json对象returnAnalysisVal[i][j] , 即一个原始句子对象。
+    
+    update ： 输入draw_sent_view.js中获得的disableAttr,调用drawContainer然后调用move函数。
+    
+    paint : disableAttr 为空的update调用。
+    
+    move : 输入为offsetX , offsetY . 
+    
+    addaptWith : 根据canvas父元素的宽度确定canvas元素的宽度.
+    
+    **坐标处理**
+    
+    setOffset : 根据偏移值设置新的绘制的`相对原点`坐标。事件接口中的移动处理逻辑会详细介绍。
+    
+    **事件接口**
+    
+    首先说下比较关键的关于**移动处理的逻辑**：
+    
+    相对原点： this.offset -> { x , y } . 这个对象记录了上次移动后停留的位置。为相对于canvas（0,0）的坐标。
+    
+    移动偏移： 当我们按下按钮后，我们立即记录按下的鼠标位置！是鼠标位置，event.pageX , event.pageY , 即在整个页面的位置,将它们保存到eventModule对象中，此记为`移动相对原点` ； 然后在我们移动过程中，我们记录当下的鼠标位置，同样是event.pageX , event.pageY , 我们用这个值减去在eventModule中的`移动相对原点`，得到了一个偏移值x , y . 我们把这个偏移值传给move函数，move函数内部将这个偏移加上`相对原点`值，即是移动后绘制图像应该在canvas被绘制的起始位置。当我们弹起鼠标后，我们把鼠标点击和弹起这段的偏移值传给setOffset函数，函数在内部将这个移动偏移更新到`相对原点`上.到此，一个完整的拖动事件就完成了。
+    
+    
+    downAction  : 记录鼠标位置，同时，还设置按下标志。
+    
+    upAction ： 设置`相对原点`位置，清楚按下标志
+    
+    moveAction ：在按下标志有效时，移动绘制图像
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
