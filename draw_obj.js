@@ -1,6 +1,3 @@
-
-
-
 function Demo(canvasId) {
     this.canvasId = canvasId ;
 	this.canvas = null ;

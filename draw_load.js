@@ -107,30 +107,17 @@ $(document).ready(function () {
 			loadingObj.style.left = left + "px";
 		}
 	}
-    getEnterNumFromStr = function(str){
-        var enterNum = 0 ,
-            startPos = 0 ;
-        while(true){
-                startPos = str.indexOf('\n', startPos) ;
-                if(startPos != -1) {
-                    enterNum++ ;
-                    startPos++ ;
-                }
-                else break ;
-        }
-        return enterNum ;
-    }
 	//---------------Event Bind----------------
 	analysisBtn.bind("click", analysis);
 	$("#viewTab a").click(function (e) {
 		e.preventDefault() ;
 		$(this).tab('show');
-        selectParaPartToDrawByValue($("input[name=paraDisItem]:checked").val());
+        var target_id = e.target.getAttribute("id") ;
+        if(target_id == "para-tab") selectParaPartToDrawByValue($("input[name=paraDisItem]:checked").val());
 	});
     
     $(sentSelectDomObj).bind("change" , function(){
         $("#inputText").val(SELECT_SENTS[$(this).val()]) ;
-        textareaEnterNum = getEnterNumFromStr(SELECT_SENTS[$(this).val()]) ;
     })
     
     $("#load-local-xml-btn").bind("click" , function(e){
@@ -148,27 +135,8 @@ $(document).ready(function () {
         }
         setLoadingPos() ;
     }) ;
-    /*
-    $("#inputText").bind({
-        "keyup" : function(e){
-            var keyChar = String.fromCharCode(e.keyCode) ;
-            if(keyChar == "\r" || keyChar == "\n") textareaEnterNum ++ ;
-            if(textareaEnterNum >= 4) $(this).attr("rows" , textareaEnterNum+1) ;
-            else $(this).attr("rows" , 4) ;
-        } ,
-        "change" : function(e){
-            var value = $(this).val() ,
-                enterNum = 0 ;
-            enterNum = getEnterNumFromStr(value) ;
-            textareaEnterNum = enterNum ;    
-            if(textareaEnterNum >= 4) $(this).attr("rows" , textareaEnterNum+1) ;
-            else $(this).attr("rows" , 4) ;
-        }
-    }) ;
-    */
 	//----------------First Call--------------------------
 	//analysis() ;
 	initNerIntro();
     $("#inputText").val(SELECT_SENTS[sentSelectDomObj.value]) ;
-    textareaEnterNum = getEnterNumFromStr(SELECT_SENTS[sentSelectDomObj.value]) ;
 });
