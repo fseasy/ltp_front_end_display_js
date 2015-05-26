@@ -2,7 +2,7 @@
 
 ### Version Intro
 
-稳定版本。对原始Flash的重写。
+临时版本。针对添加了Semantic Dependency Parser结果的绘制(semparent , semrelate两个字段)。
 
 ####结构
 包含文件

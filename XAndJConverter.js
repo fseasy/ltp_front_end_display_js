@@ -80,6 +80,8 @@ function getDocElement(xmlDOM,JsonData){
                 word.setAttribute("ne" , JsonWord.ne) ;
                 word.setAttribute("parent" , JsonWord.parent) ;
                 word.setAttribute("relate" , JsonWord.relate) ;
+                word.setAttribute("semparent" , JsonWord.semparent) ;
+                word.setAttribute("semrelate" , JsonWord.semrelate) ;
 
                 // add the arg
 
@@ -211,7 +213,7 @@ function getDocJSON(docXML){
                     argList.push(argJSON) ;
                 }
                 wordJSON["arg"] = argList ;
-                var attrList = ["id" , "cont" , "pos" , "ne" , "parent" , "relate" ] ;
+                var attrList = ["id" , "cont" , "pos" , "ne" , "parent" , "relate" , "semparent" , "semrelate" ] ;
                 for(var i = 0 ; i < attrList.length ; i++){
                     wordJSON[attrList[i]] = word.getAttribute(attrList[i]) ;
                 }

@@ -65,6 +65,7 @@ Demo.prototype = {
 			ner : [],
 			srl : [],
 			dp : [],
+            sdp : [] ,
 			WS_INTERVAL : 40,
 			width : 0,
 			height : 0,
@@ -91,7 +92,11 @@ Demo.prototype = {
 			DP_DISCONF : {
 				"lineColor" : "blue",
 				"textColor" : "red"
-			}
+			} ,
+            SDP_DISCONF : {
+                "lineColor" : "green" ,
+                "textColor" : "red"
+            }
 		},
 		this.offset = {
 			x : 0,
@@ -125,6 +130,11 @@ Demo.prototype = {
 				"to" : parseInt(i) ,
 				"relate" : sentObj[i].relate
 			});
+            this.drawStruct.sdp.push({
+                "from" : parseInt(sentObj[i].semparent) ,
+                "to" : parseInt(i) ,
+                "relate" : sentObj[i].semrelate
+            })
 		}
 		//we need know the last Word 's length, so add a virtual node at last
 		preTextWidth = cxt.measureText(this.drawStruct.texts[i]).width;
@@ -363,7 +373,7 @@ Demo.prototype = {
 		this.setCanvasAppropriateHeight(canvas, 0, height);
 		return canvas;
 	},
-	drawDpNode : function (dpNode, drawStruct, cxt) {
+	drawDpNode : function (dpNode, drawStruct, cxt , dp_type) {
 		var fromCenter,
 		fromX,
 		toCenter,
@@ -386,7 +396,7 @@ Demo.prototype = {
 		controlPointHeight = Math.abs(dpNode.to - dpNode.from) * 13 + 10;
 		controlPointY = lineY - controlPointHeight;
 		actualY = lineY - controlPointHeight * 3 / 4;
-		cxt.strokeStyle = drawStruct.DP_DISCONF.lineColor;
+		cxt.strokeStyle = dp_type=="dp" ? drawStruct.DP_DISCONF.lineColor : drawStruct.SDP_DISCONF.lineColor ;
 		cxt.beginPath(); // !!!! must clear previous path ! or previous path will be repaint again and again , then the line become ugly with jaggies
 		cxt.moveTo(fromX, lineY);
 		cxt.bezierCurveTo(fromX, controlPointY, toCenter, controlPointY, toCenter, lineY);
@@ -399,10 +409,10 @@ Demo.prototype = {
 		cxt.lineTo(toCenter - arrowLeftOffset, paintY - arrowHeight);
 		cxt.lineTo(toCenter + (arrowWidth - arrowLeftOffset), paintY - arrowHeight);
 		cxt.closePath();
-		cxt.fillStyle = drawStruct.DP_DISCONF.lineColor;
+		cxt.fillStyle = dp_type=="dp" ? drawStruct.DP_DISCONF.lineColor : drawStruct.SDP_DISCONF.lineColor ;
 		cxt.fill();
 		//draw relate text
-		cxt.fillStyle = drawStruct.DP_DISCONF.textColor;
+		cxt.fillStyle = dp_type=="dp" ? drawStruct.DP_DISCONF.textColor : drawStruct.SDP_DISCONF.textColor ;
 		cxt.textAlign = "center";
 		this.setEnTextFont(cxt);
 		cxt.fillText(dpNode.relate, (fromX + toCenter) / 2, actualY + this.getFontSizeFromFontstr(cxt.font) / 2);
@@ -418,7 +428,7 @@ Demo.prototype = {
 		newHeight;
 		cxt.lineWidth = 0.6;
 		for (i = 0; i < drawStruct.dp.length; i++) {
-			yPos = this.drawDpNode(drawStruct.dp[i], drawStruct, cxt);
+			yPos = this.drawDpNode(drawStruct.dp[i], drawStruct, cxt , "dp");
 			if (minY > yPos)
 				minY = yPos;
 		}
@@ -429,6 +439,39 @@ Demo.prototype = {
 		this.setCanvasAppropriateHeight(canvas, minY, newHeight);
 		return canvas;
 	},
+    drawSDP : function(drawStruct){
+        if(drawStruct.sdp.length == 0) return null ;
+		var sdpCanvas = this.createCanvasBuffer(5000, 5000),
+        wsCanvas = null ,
+        wholeCanvas = null ,
+		cxt = sdpCanvas.getContext("2d"),
+		i,
+		minY = sdpCanvas.height,
+		newHeight ,
+        wholeWidth ,
+        wholeHeight;
+		cxt.lineWidth = 0.6;
+		for (i = 0; i < drawStruct.sdp.length; i++) {
+			yPos = this.drawDpNode(drawStruct.sdp[i], drawStruct, cxt , "sdp");
+			if (minY > yPos)
+				minY = yPos;
+		}
+		minY -= 10; //  the up margin
+		//move the image to the right position
+		//first we should save the image data , then change the canvas height and put the imageData to it
+		newHeight = sdpCanvas.height - minY;
+		this.setCanvasAppropriateHeight(sdpCanvas, minY, newHeight);
+		
+        // here we should add the ws result under the sdp lines
+        wsCanvas = this.drawWS(drawStruct) ;
+        wholeWidth = Math.max(sdpCanvas.width , wsCanvas.width) ;
+        wholeHeight = sdpCanvas.height + wsCanvas.height ;
+        wholeCanvas = this.createCanvasBuffer(wholeWidth , wholeHeight) ;
+        cxt = wholeCanvas.getContext('2d') ;
+        cxt.drawImage(sdpCanvas , 0 , 0) ;
+        cxt.drawImage(wsCanvas , 0 , sdpCanvas.height) ;
+        return wholeCanvas ;
+    } ,
 	/*
 	 **according to the drawStruct , paint the five components
 	 * return value : a object contains the five components
@@ -438,7 +481,8 @@ Demo.prototype = {
 		POSTAGCanvas,
 		NERCanvas,
 		SRLCanvas,
-		DPCanvas;
+		DPCanvas ,
+        SDPCanvas ;
 		this.canvasBufs = {};
 		// draw WS at WSCanvas buffer
 		WSCanvas = this.drawWS(drawStruct);
@@ -450,17 +494,19 @@ Demo.prototype = {
 		SRLCanvas = this.drawSRL(drawStruct);
 		// draw DP
 		DPCanvas = this.drawDP(drawStruct);
-
+        // draw SDP
+        SDPCanvas =this.drawSDP(drawStruct) ;
 		this.canvasBufs["WS"] = WSCanvas;
 		this.canvasBufs["POSTAG"] = POSTAGCanvas;
 		this.canvasBufs["NER"] = NERCanvas;
 		this.canvasBufs["SRL"] = SRLCanvas;
 		this.canvasBufs["DP"] = DPCanvas;
+        this.canvasBufs["SDP"] = SDPCanvas ;
 
 		return this.canvasBufs;
 	},
 	/**
-	 *draw containers according to the five components  , and the disable attribute
+	 *draw containers according to the six components  , and the disable attribute
 	 *return value : the container 's imageData
 	 */
 	drawContainer : function (drawStruct, canvasBufs, disableAttr) {
@@ -474,13 +520,16 @@ Demo.prototype = {
 			"POSTAG" : null,
 			"NER" : null,
 			"DP" : null,
-			"SRL" : null
+			"SRL" : null ,
+            "SDP" : null 
 		},
 		offsetX = 0,
 		offsetY = 0,
 		intervalY = 10,
 		paintY = offsetY,
-		drawTarget;
+		drawTarget ,
+        WS_Y_start ,
+        WS_Y_end;
 
 		//bulid the drawBufs
 		if (typeof disableAttr == "undefined" || disableAttr == null)
@@ -493,9 +542,10 @@ Demo.prototype = {
 
 		//draw canvasBufs to the display canvas
 		// drawImage 's first parameter can be HTMLCanvasElement , HTMLImageElement , HTMLVideoElement
-		drawTarget = ["DP", "WS", "POSTAG", "NER", "SRL"];
+		drawTarget = ["DP", "WS", "POSTAG", "NER", "SRL" , "SDP"];
 		for (var i = 0; i < drawTarget.length; i++) {
-			var drawCanvas = drawBufs[drawTarget[i]];
+			var curTarget = drawTarget[i] ,
+                drawCanvas = drawBufs[curTarget];
 			if (typeof drawCanvas == "string" && drawCanvas == "disable")
 				continue;
 			else if (drawCanvas == null)
@@ -503,11 +553,15 @@ Demo.prototype = {
 			else {
 				cxt.drawImage(drawCanvas, offsetX, paintY);
 				paintY += intervalY + drawCanvas.height;
+                if(curTarget == "WS"){
+                    WS_Y_START = paintY - drawCanvas.height - intervalY ;
+                    WS_Y_END = paintY ;
+                }
 			}
 		}
         // fix the 'Root' BUG
         if(drawBufs["DP"] == null || drawBufs["DP"] == "disable"){
-            cxt.clearRect(0,0,drawStruct.posInfo[1] - drawStruct.WS_INTERVAL,paintY) ;
+            cxt.clearRect(0,WS_Y_START,drawStruct.posInfo[1] - drawStruct.WS_INTERVAL,WS_Y_END - WS_Y_START) ;
         }
 		this.setCanvasAppropriateHeight(canvas, 0, paintY);
 		// set drawStruct 's height

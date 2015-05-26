@@ -31,7 +31,8 @@ $(document).ready(function () {
 		postData,
 		targetURL;
         
-		requestArgs["api_key"] = "U2G658z15u6Q4RpksQHC9KDevunLIypIHc5nPr5U";
+		//requestArgs["api_key"] = "U2G658z15u6Q4RpksQHC9KDevunLIypIHc5nPr5U";
+		requestArgs["api_key"] = "Q2MnjbFfyamoCi2YrdcdgXautrLHWENlskDEOrPI";
 		requestArgs["pattern"] = "all";
 		requestArgs["format"] = "json";
 		requestArgs["text"] = encodeURI($("#inputText").val());
@@ -42,7 +43,8 @@ $(document).ready(function () {
 			}
 			return tmpStrArray.join("&");
 		})();
-		targetURL = "http://ltpapi.voicecloud.cn/analysis/" ;
+        //targetURL = "http://ltpapi.voicecloud.cn/analysis/" ;
+		targetURL = "http://192.168.21.36:8887/analysis/" ;
         //ajax
         $.ajax({
             url : targetURL,
@@ -50,6 +52,7 @@ $(document).ready(function () {
             async : true,
             dataType : "jsonp",
             data : postData,
+            timeout : 10000 ,
             success : function (returnVal) {
                 returnAnalysisRst = returnVal;
                 //sent view update
@@ -57,11 +60,13 @@ $(document).ready(function () {
                 //xml view update
                 readyXmlView(returnVal) ;
             },
-            error : function (errorInfo) {
+            error : function (errorInfo , errorType) {
                 console.log(errorInfo);
                 loadingObj.innerHTML = ['<p class="text-error">' ,
                                         '发送分析请求失败！请点击<code>分析</code>重试.' ,
                 '</p>'].join('') ;
+                loadingObj.innerHTML += '<p>' + errorType ;
+                loadingObj.innerHTML += errorInfo.responseText ;
             }
         });
 		//update the UI : display the loading page
