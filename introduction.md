@@ -1,5 +1,9 @@
 ##Introducion for ltp front drawing
 
+### Version Intro
+
+稳定版本。对原始Flash的重写。
+
 ####结构
 包含文件
     
