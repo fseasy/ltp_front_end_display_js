@@ -1,10 +1,18 @@
-##Introducion for ltp front drawing
+# Introducion for ltp front drawing
 
-### Version Intro
+## Version Information
 
-稳定版本。对原始Flash的重写。
+1. 1.0 稳定版本。
 
-####结构
+    - 完成对原始Flash的重写；基本重现了Flash的绘制、拖动、更新等功能。
+
+2. 1.1 测试版本。
+
+    - 加入Sdp多父亲节点的支持
+    - Next: 在句子视图，更改不同的绘制目标后（如取消 Sdp绘制），Canvas出现抖动（即从当前移动位置，立即move到原点）。后续修改这个问题。
+
+## 结构
+
 包含文件
     
 - canvas_ex.js
@@ -31,7 +39,9 @@
 
     XML与JSON的转换，以及将XML原始代码格式化为用于显示的html代码
     
-####详细信息
+## 详细信息
+
+> TODO:  UPDATE
 
 - 页面信息
 
@@ -458,23 +468,3 @@
     upAction ： 设置`相对原点`位置，清楚按下标志
     
     moveAction ：在按下标志有效时，移动绘制图像
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
- 

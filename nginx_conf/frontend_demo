@@ -1,0 +1,28 @@
+server {
+    listen 2333;
+    server_name 192.168.21.36 localhost 0.0.0.0 127.0.0.1;
+    root /home/file/osshared/code/frontend_demo/;
+    index /demo_main.htm;
+    add_header Cache-Control 'no-store';
+    
+    location /fake_xml{
+      rewrite ^(.*)$ http://192.168.21.36:2333/xml/sdp_with_multi_parent.xml;
+    }
+
+}
+
+upstream ltp_server{
+    server 127.0.0.1:12345;
+}
+
+server {
+    listen 5566;
+    server_name 192.168.21.36 localhost 0.0.0.0 127.0.0.1;
+    
+    location /srv/ {
+        proxy_pass http://ltp_server/;
+        allow all;
+        add_header 'Access-Control-Allow-Origin' *;
+    }
+
+}
